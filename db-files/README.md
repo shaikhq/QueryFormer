@@ -1,1 +1,0 @@
-This folder has one of the data file for the imdb database. In particular, the content of the table title. 
