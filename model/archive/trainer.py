@@ -155,69 +155,6 @@ def train(model, train_ds, val_ds, crit, \
 
     return model, best_model_path
 
-def train_single(model, train_ds, val_ds, crit, \
-        cost_norm, args, optimizer=None, scheduler=None):
-    
-    to_pred, bs, device, epochs, clip_size = \
-    args.to_predict, args.bs, args.device, args.epochs, args.clip_size
-    lr = args.lr
-
-    if not optimizer:
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    if not scheduler:
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 20, 0.7)
-
-
-    t0 = time.time()
-
-    rng = np.random.default_rng()
-
-    best_prev = 999999
-
-
-    for epoch in range(epochs):
-        losses = 0
-        cost_predss = np.empty(0)
-
-        model.train()
-
-        train_idxs = rng.permutation(len(train_ds))
-
-        cost_labelss = np.array(train_ds.costs)[train_idxs]
-
-
-        for idxs in chunks(train_idxs, bs):
-            optimizer.zero_grad()
-
-            batch, batch_labels = collator(list(zip(*[train_ds[j] for j in idxs])))
-            
-            l, r = zip(*(batch_labels))
-
-            batch_cost_label = torch.FloatTensor(l).to(device)
-            batch = batch.to(device)
-
-            cost_preds, _ = model(batch)
-            cost_preds = cost_preds.squeeze()
-
-            loss = crit(cost_preds, batch_cost_label)
-
-            loss.backward()
-
-            torch.nn.utils.clip_grad_norm_(model.parameters(), clip_size)
-
-            optimizer.step()
-            # SQ: added the following 3 lines to fix the out of memory issue
-            del batch
-            del batch_labels
-            torch.cuda.empty_cache()
-
-            losses += loss.item()
-            cost_predss = np.append(cost_predss, cost_preds.detach().cpu().numpy())
-
-        scheduler.step()   
-
-    return model
-
 
 def logging(args, epoch, qscores, filename = None, save_model = False, model = None):
     arg_keys = [attr for attr in dir(args) if not attr.startswith('__')]
