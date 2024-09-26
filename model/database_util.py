@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import csv
 import torch
+import logging
 
 ## bfs shld be enough
 def floyd_warshall_rewrite(adjacency_matrix):
@@ -244,7 +245,7 @@ def filterDict2Hist(hist_file, filterDict, encoding):
         
 
 
-
+#TODO: change the join condition name to join condition
 def formatJoin(json_node):
    
     join = None
@@ -322,6 +323,7 @@ class Encoding:
     
     def encode_filters(self, filters=[], alias=None): 
         ## filters: list of dict 
+        logging.info('encode_filters() printing alias: {}'.format(alias))
 
 #        print(filt, alias)
         if len(filters) == 0:
@@ -334,9 +336,24 @@ class Encoding:
             fs = filt.split(' AND ')
             for f in fs:
      #           print(filters)
+                logging.info('encode_filters - filter: {}'.format(f))
                 col, op, num = f.split(' ')
-                column = alias + '.' + col
+                #TODO: alias None fix: added the following if/else condition that checkes if the table's alias is provided. 
+                # For TPCDS query plans, the alias already included in the filter column name
+                # original code: column = alias + '.' + col
+                logging.info('encode_filters - filter num: {}'.format(num))
+                logging.info('encode_filters - filter num type: {}'.format(type(num)))
+
+                if alias is not None: 
+                    column = alias + '.' + col
+                else:
+                    column = col
     #            print(f)
+                #TODO: SQ added the following 1 line of code for adding a new column to the column dict
+                self.encode_column(column)
+                
+                #TODO: SQ added the following 1 line of code for adding a new op to the op dict
+                self.encode_op(op)
                 
                 res['colId'].append(self.col2idx[column])
                 res['opId'].append(self.op2idx[op])
@@ -361,6 +378,19 @@ class Encoding:
             self.idx2type[self.type2idx[nodeType]] = nodeType
         return self.type2idx[nodeType]
 
+    #TODO: SQ - added this new method for encoding a new column
+    def encode_column(self, column):
+        if column not in self.col2idx:
+            self.col2idx[column] = len(self.col2idx)
+            self.idx2col[self.col2idx[column]] = column
+        return self.col2idx[column]
+
+    #TODO: SQ - added this new method for encoding new operator type
+    def encode_op(self, op):
+        if op not in self.op2idx:
+            self.op2idx[op] = len(self.op2idx)
+            self.idx2op[self.op2idx[op]] = op
+        return self.op2idx[op]
 
 class TreeNode:
     def __init__(self, nodeType, typeId, filt, card, join, join_str, filterDict):

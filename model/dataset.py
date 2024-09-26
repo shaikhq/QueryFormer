@@ -25,7 +25,7 @@ class PlanTreeDataset(Dataset):
         logging.info('self.length = len(json_df): {}'.format(self.length))
 
         # train = train.loc[json_df['id']]
-            
+        # TODO: At the top level dictionary, add Execution Time - DONE
         nodes = [json.loads(plan)['Plan'] for plan in json_df['json']]
         logging.info('nodes.type: {}'.format(type(nodes)))
         logging.info('number of nodes: {}'.format(len(nodes)))
@@ -33,9 +33,18 @@ class PlanTreeDataset(Dataset):
         logging.info('keys in the first dictionary in the nodes list: {}'.format(nodes[0].keys()))
 
         self.cards = [node['Actual Rows'] for node in nodes]
+        logging.info('self.cards: {}'.format(self.cards))
         self.costs = [json.loads(plan)['Execution Time'] for plan in json_df['json']]
             
-        self.card_labels = torch.from_numpy(card_norm.normalize_labels(self.cards))
+        # TODO: check if I need to change the min and max values in both normalizers
+        # TODO: for now, I am not normalizing it since I have only 1 training query
+        # Original line
+        # self.card_labels = torch.from_numpy(card_norm.normalize_labels(self.cards))
+        # temporary line:
+        self.card_labels = torch.from_numpy(np.array(self.cards))
+
+        logging.info('self.card_labels: {}'.format(self.card_labels))
+
         self.cost_labels = torch.from_numpy(cost_norm.normalize_labels(self.costs))
             
         self.to_predict = to_predict
@@ -50,15 +59,16 @@ class PlanTreeDataset(Dataset):
             self.labels = self.cost_labels
         else:
             raise Exception('Unknown to_predict type')
-                
+        
+        #TODO: change this to get the query ids - should be done, but needs verification
         idxs = list(json_df['id'])
         logging.info('idxs: {}'.format(idxs))
             
-        
         self.treeNodes = [] ## for mem collection
 
         self.collated_dicts = [self.js_node2dict(i,node) for i,node in zip(idxs, nodes)]
-
+        
+        # TODO: db2 dataset prep - uncomment below
         logging.info('collated_dicts: {}'.format(type(self.collated_dicts)))
         logging.info('collated_dicts (list) len: {}'.format(len(self.collated_dicts)))
         # logging.info('collated_dicts (list) item type: {}'.format(type(self.collated_dicts[0])))
@@ -72,11 +82,13 @@ class PlanTreeDataset(Dataset):
         logging.info("self.collated_dicts[0].keys()['rel_pos'].shape: {}".format(self.collated_dicts[0]['rel_pos'].shape))
         logging.info("self.collated_dicts[0].keys()['heights']: {}".format(self.collated_dicts[0]['heights']))
         logging.info("self.collated_dicts[0].keys()['heights'].shape: {}".format(self.collated_dicts[0]['heights'].shape))
+        logging.info("labels: {}".format(self.labels))
+        #TODO: db2 dataset prep - uncomment above
 
-        # logging.info('printing the tensors of the 2nd training query')
-        # logging.info('collated_dicts: {}'.format(type(self.collated_dicts)))
-        # logging.info('collated_dicts (list) len: {}'.format(len(self.collated_dicts)))
-        # # logging.info('collated_dicts (list) item type: {}'.format(type(self.collated_dicts[0])))
+        logging.info('printing the tensors of the 2nd training query')
+        logging.info('collated_dicts: {}'.format(type(self.collated_dicts)))
+        logging.info('collated_dicts (list) len: {}'.format(len(self.collated_dicts)))
+        # logging.info('collated_dicts (list) item type: {}'.format(type(self.collated_dicts[0])))
         # logging.info('type(self.collated_dicts[0]): {}'.format(type(self.collated_dicts[1])))
         # logging.info('self.collated_dicts[0].keys(): {}'.format(self.collated_dicts[1].keys()))
         # logging.info("self.collated_dicts[0].keys()['x']: {}".format(self.collated_dicts[1]['x']))
@@ -88,7 +100,7 @@ class PlanTreeDataset(Dataset):
         # logging.info("self.collated_dicts[0].keys()['heights']: {}".format(self.collated_dicts[1]['heights']))
         # logging.info("self.collated_dicts[0].keys()['heights'].shape: {}".format(self.collated_dicts[1]['heights'].shape))
 
-        #logging.info('length of treeNodes: {}'.format(len(self.treeNodes)))
+        logging.info('length of treeNodes: {}'.format(len(self.treeNodes)))
 
 
         logging.info('PlanTreeDataset initialized')
@@ -99,9 +111,12 @@ class PlanTreeDataset(Dataset):
 
         treeNode = self.traversePlan(node, idx, self.encoding)
 
+        
         _dict = self.node2dict(treeNode)
         logging.info("_dict's features: {}".format(_dict['features']))
         logging.info("_dict's features shape: {}".format(_dict['features'].shape))
+        
+        #TODO: js_node2dict - uncomment below
 
         logging.info("_dict's heights: {}".format(_dict['heights']))
         logging.info("_dict's heights shape: {}".format(_dict['heights'].shape))
@@ -119,6 +134,9 @@ class PlanTreeDataset(Dataset):
         del self.treeNodes[:]
 
         return collated_dict
+        #TODO: js_node2dict - uncomment above
+        return {}
+
 
     def __len__(self):
         return self.length
@@ -204,18 +222,20 @@ class PlanTreeDataset(Dataset):
     def traversePlan(self, plan, idx, encoding): # bfs accumulate plan
 
         nodeType = plan['Node Type']
-        logging.info('nodeType: {}'.format(nodeType))
+        #logging.info('nodeType: {}'.format(nodeType))
 
         typeId = encoding.encode_type(nodeType)
-        logging.info('typeId: {}'.format(typeId))
+        #logging.info('typeId: {}'.format(typeId))
 
         card = None #plan['Actual Rows']
+        #TODO: adapt formatFilter to work with a list of filters
         filters, alias = formatFilter(plan)
         logging.info('formatFilter - filters: {}'.format(filters))
         logging.info('formatFilter - alias: {}'.format(alias))
 
         filters_encoded = encoding.encode_filters(filters, alias)
 
+        #TODO: check if I need to add any key for the JOIN nodes
         join = formatJoin(plan)
         logging.info('formatJoin - join: {}'.format(join))
         joinId = encoding.encode_join(join)
@@ -284,16 +304,39 @@ def node2feature(node, encoding, hist_file, table_sample):
 
     type_join = np.array([node.typeId, node.join])
     
+    #TODO: Uncomment the following 3 lines of code, which encode filter values using hist
     hists = filterDict2Hist(hist_file, node.filterDict, encoding)
     logging.info('hists = filterDict2Hist(hist_file, node.filterDict, encoding): printing hists {}'.format(hists))
     logging.info('len(hists) {}'.format(len(hists)))
 
     # table, bitmap, 1 + 1000 bits
     table = np.array([node.table_id])
+    logging.info('node.table: {}'.format(node.table))
+    
+
     if node.table_id == 0:
+        sample = np.zeros(1000)
+    # TODO: I temporarily added the following 2 lines of code to crate a fake sample bitmap for TPCDS dataset. I need to remove them after creating 
+    # actual sample bitmap
+    elif node.table not in table_sample[node.query_id]:
         sample = np.zeros(1000)
     else:
         sample = table_sample[node.query_id][node.table]
     
     #return np.concatenate((type_join,filts,mask))
-    return np.concatenate((type_join, filts, mask, hists, table, sample))
+    
+    #TODO: Uncomment below original line
+    # return np.concatenate((type_join, filts, mask, hists, table, sample))
+    
+    logging.info('printing node elements from node2feature method:')
+    logging.info('node.type: {}'.format(node.typeId))
+    logging.info('node.join: {}'.format(node.join))
+    #logging.info('node.filts: {}'.format(node.filts))
+    logging.info('node.mask: {}'.format(mask))
+    logging.info('node.table: {}'.format(node.table))
+    
+    if node.table_id > 0:
+        logging.info('node.sample: {}'.format(sample))
+    
+    return np.concatenate((type_join, filts, mask, table, sample))
+

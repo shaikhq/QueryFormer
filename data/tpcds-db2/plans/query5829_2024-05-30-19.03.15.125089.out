@@ -1,0 +1,561 @@
+DB2 Universal Database Version 12.1, 5622-044 (c) Copyright IBM Corp. 1991, 2022
+Licensed Material - Program Property of IBM
+IBM Db2 Explain Table Format Tool
+
+
+
+******************** EXPLAIN INSTANCE ********************
+
+DB2_VERSION:       12.01.0
+FORMATTED ON DB:   TPCDS
+SOURCE_NAME:       SQLC2Q31
+SOURCE_SCHEMA:     NULLID  
+SOURCE_VERSION:      
+EXPLAIN_TIME:      2024-05-30-19.03.15.125089
+EXPLAIN_REQUESTER: SHAIKHQ 
+
+Database Context:
+----------------
+	Parallelism:          None
+	CPU Speed:            4.000000e-05
+	Comm Speed:           0
+	Buffer Pool size:     132072
+	Sort Heap size:       1000
+	Database Heap size:   1200
+	Lock List size:       4096
+	Maximum Lock List:    10
+	Average Applications: 1
+	Locks Available:      13107
+
+Package Context:
+---------------
+	SQL Type:           Dynamic
+	Optimization Level: 5
+	Blocking:           Block All Cursors
+	Isolation Level:    Cursor Stability
+
+
+
+---------------- STATEMENT 1  SECTION 201 ----------------
+	QUERYNO:       0
+	QUERYTAG:      CLP                 
+	Statement Type:   Select
+	Updatable:        No
+	Deletable:        No
+	Query Degree:     1
+
+Original Statement:
+------------------
+SELECT 
+  TPCDS.PROMOTION.P_ITEM_SK,
+  TPCDS.DATE_DIM2.D_LAST_DOM 
+FROM 
+  TPCDS.PROMOTION 
+  INNER JOIN TPCDS.DATE_DIM2 
+  ON TPCDS.DATE_DIM2.D_DATE_SK = TPCDS.PROMOTION.P_END_DATE_SK 
+WHERE 
+  TPCDS.PROMOTION.P_END_DATE_SK <= 2450955 AND 
+  TPCDS.PROMOTION.P_RESPONSE_TARGET <= 1
+
+
+Optimized Statement:
+-------------------
+SELECT 
+  Q1.P_ITEM_SK AS "P_ITEM_SK",
+  Q2.D_LAST_DOM AS "D_LAST_DOM" 
+FROM 
+  TPCDS.PROMOTION AS Q1,
+  TPCDS.DATE_DIM2 AS Q2 
+WHERE 
+  (Q2.D_DATE_SK = Q1.P_END_DATE_SK) AND 
+  (Q1.P_RESPONSE_TARGET <= 1) AND 
+  (Q1.P_END_DATE_SK <= 2450955)
+
+Explain level:    Explain from section
+
+Access Plan:
+-----------
+	Total Cost: 		167.303
+	Query Degree:		1
+
+
+                Rows 
+             Rows Actual
+               RETURN
+               (   1)
+                Cost 
+                 I/O 
+                 |
+               3697.93 
+                 290 
+               ^NLJOIN
+               (   2)
+               167.303 
+                 NA 
+         /-------+-------\
+     94.8735             38.9774 
+       290                 NA 
+     TBSCAN              FETCH 
+     (   3)              (   4)
+     70.5816             18.9335 
+       NA                  NA 
+       |              /----+-----\
+       300        38.9774         73049 
+       NA            1             NA 
+ TABLE: TPCDS     IXSCAN   DP-TABLE: TPCDS   
+    PROMOTION     (   5)        DATE_DIM2
+       Q1         9.25727          Q2
+                    NA 
+                    |
+                   73049 
+                    NA 
+              INDEX: SYSIBM  
+            SQL240509072221830
+                    Q2
+
+
+Operator Symbols :
+------------------
+
+   Symbol      Description
+   ---------   ------------------------------------------
+   >JOIN     : Left outer join
+    JOIN<    : Right outer join
+   >JOIN<    : Full outer join
+   xJOIN     : Left antijoin
+    JOINx    : Right antijoin
+   ^JOIN     : Left early out
+    JOIN^    : Right early out
+
+
+Extended Diagnostic Information:
+--------------------------------
+
+No extended Diagnostic Information for this statement.
+
+
+Plan Details:
+-------------
+
+
+	1) RETURN: (Return Result)
+		Cumulative Total Cost: 		167.303
+		Cumulative First Row Cost: 	25.2403
+		Estimated Bufferpool Buffers: 	14
+
+		Arguments:
+		---------
+		BLDLEVEL: (Build level)
+			DB2 v12.1.0.0 : z2212010100
+		ENVVAR  : (Environment Variable)
+			DB2_SELECTIVITY=MODEL_JOIN_CARD ON
+		EXECUTID: (Executable ID)
+			0100000000000000AB6C04000000000000000000020020240530190314800811
+		HEAPUSE : (Maximum Statement Heap Usage)
+			128 Pages
+		PLANID  : (Access plan identifier)
+			2927d2db5f3a4f55
+		SEMEVID : (Semantic environment identifier)
+			0000000000000001
+		STMTHEAP: (Statement heap size)
+			8192
+		STMTID  : (Normalized statement identifier)
+			4f38f012faaa77c4
+		TENANTID: (Compiled In Tenant ID)
+			0
+		TENANTNM: (Compiled In Tenant Name)
+			SYSTEM
+
+		Input Streams:
+		-------------
+			7) From Operator #2
+
+				Estimated number of rows: 	3697.93
+				Actual number of rows: 		290
+
+
+	2) NLJOIN: (Nested Loop Join)
+		Cumulative Total Cost: 		167.303
+		Cumulative First Row Cost: 	25.2403
+		Estimated Bufferpool Buffers: 	14
+
+		Arguments:
+		---------
+		EARLYOUT: (Early Out flag)
+			LEFT
+		FETCHMAX: (Override for FETCH MAXPAGES)
+			IGNORE
+		ISCANMAX: (Override for ISCAN MAXPAGES)
+			IGNORE
+
+		Predicates:
+		----------
+		3) Predicate used in Join, 
+			Comparison Operator: 		Equal (=)
+			Subquery Input Required: 	No
+			Filter Factor: 				2.78283e-05
+
+			Predicate Text:
+			--------------
+			(Q2.D_DATE_SK = Q1.P_END_DATE_SK)
+
+
+
+		Input Streams:
+		-------------
+			2) From Operator #3
+
+				Estimated number of rows: 	94.8735
+				Actual number of rows: 		290
+
+			6) From Operator #4
+
+				Estimated number of rows: 	38.9774
+				Actual number of rows: 		NA
+
+
+		Output Streams:
+		--------------
+			7) To Operator #1
+
+				Estimated number of rows: 	3697.93
+				Actual number of rows: 		290
+
+
+	3) TBSCAN: (Table Scan)
+		Cumulative Total Cost: 		70.5816
+		Cumulative First Row Cost: 	9.45904
+		Estimated Bufferpool Buffers: 	5
+
+		Arguments:
+		---------
+		CUR_COMM: (Currently Committed)
+			TRUE
+		JN INPUT: (Join input leg)
+			OUTER
+		LCKAVOID: (Lock Avoidance)
+			TRUE
+		MAXPAGES: (Maximum pages for prefetch)
+			ALL
+		PREFETCH: (Type of Prefetch)
+			NONE                
+		ROWLOCK : (Row Lock intent)
+			SHARE (CS/RS)
+		SCANDIR : (Scan Direction)
+			FORWARD
+		SKIP_INS: (Skip Inserted Rows)
+			TRUE
+		SPEED   : (Assumed speed of scan, in sharing structures)
+			SLOW
+		TABLOCK : (Table Lock intent)
+			INTENT SHARE
+		TBISOLVL: (Table access Isolation Level)
+			CURSOR STABILITY
+		THROTTLE: (Scan may be throttled, for scan sharing)
+			TRUE
+		VISIBLE : (May be included in scan sharing structures)
+			TRUE
+		WRAPPING: (Scan may start anywhere and wrap)
+			TRUE
+
+		Predicates:
+		----------
+		4) Sargable Predicate, 
+			Comparison Operator: 		Less Than or Equal (<=)
+			Subquery Input Required: 	No
+			Filter Factor: 				0.333333
+
+			Predicate Text:
+			--------------
+			(Q1.P_RESPONSE_TARGET <= 1)
+
+
+		5) Sargable Predicate, 
+			Comparison Operator: 		Less Than or Equal (<=)
+			Subquery Input Required: 	No
+			Filter Factor: 				0.948735
+
+			Predicate Text:
+			--------------
+			(Q1.P_END_DATE_SK <= 2450955)
+
+
+
+		Input Streams:
+		-------------
+			1) From Object TPCDS.PROMOTION
+
+				Estimated number of rows: 	300
+
+				Column Names:
+				------------
+				+Q1.$RID$+Q1.P_ITEM_SK+Q1.P_RESPONSE_TARGET
+				+Q1.P_END_DATE_SK
+
+
+		Output Streams:
+		--------------
+			2) To Operator #2
+
+				Estimated number of rows: 	94.8735
+				Actual number of rows: 		290
+
+
+	4) FETCH : (Fetch)
+		Cumulative Total Cost: 		18.9335
+		Cumulative First Row Cost: 	15.7813
+		Estimated Bufferpool Buffers: 	9
+
+		Arguments:
+		---------
+		CUR_COMM: (Currently Committed)
+			TRUE
+		GLOBLOCK: (Global Lock intent)
+			INTENT SHARE
+		JN INPUT: (Join input leg)
+			INNER
+		LCKAVOID: (Lock Avoidance)
+			TRUE
+		MAXPAGES: (Maximum pages for prefetch)
+			1
+		PREFETCH: (Type of Prefetch)
+			NONE                
+		ROWLOCK : (Row Lock intent)
+			SHARE (CS/RS)
+		SKIP_INS: (Skip Inserted Rows)
+			TRUE
+		SPEED   : (Assumed speed of scan, in sharing structures)
+			SLOW
+		TABLOCK : (Table Lock intent)
+			INTENT SHARE
+		TBISOLVL: (Table access Isolation Level)
+			CURSOR STABILITY
+		THROTTLE: (Scan may be throttled, for scan sharing)
+			FALSE
+		VISIBLE : (May be included in scan sharing structures)
+			FALSE
+		WRAPPING: (Scan may start anywhere and wrap)
+			FALSE
+
+		Input Streams:
+		-------------
+			4) From Operator #5
+
+				Estimated number of rows: 	38.9774
+				Actual number of rows: 		1
+
+			5) From Object TPCDS.DATE_DIM2
+
+				Estimated number of rows: 	73049
+
+				Column Names:
+				------------
+				+Q2.D_LAST_DOM
+
+
+		Output Streams:
+		--------------
+			6) To Operator #2
+
+				Estimated number of rows: 	38.9774
+				Actual number of rows: 		NA
+
+
+	5) IXSCAN: (Index Scan)
+		Cumulative Total Cost: 		9.25727
+		Cumulative First Row Cost: 	8.37327
+		Estimated Bufferpool Buffers: 	2
+
+		Arguments:
+		---------
+		CUR_COMM: (Currently Committed)
+			TRUE
+		DPESTFLG: (Number of data partitions accessed are Estimated)
+			FALSE
+		DPLSTPRT: (List of data partitions accessed)
+			- (NULL).
+		DPNUMPRT: (Number of data partitions accessed)
+			9
+		GLOBLOCK: (Global Lock intent)
+			INTENT SHARE
+		LCKAVOID: (Lock Avoidance)
+			TRUE
+		MAXPAGES: (Maximum pages for prefetch)
+			1
+		PREFETCH: (Type of Prefetch)
+			READAHEAD           
+		ROWLOCK : (Row Lock intent)
+			SHARE (CS/RS)
+		SCANDIR : (Scan Direction)
+			FORWARD
+		SKIP_INS: (Skip Inserted Rows)
+			TRUE
+		TABLOCK : (Table Lock intent)
+			INTENT SHARE
+		TBISOLVL: (Table access Isolation Level)
+			CURSOR STABILITY
+
+		Predicates:
+		----------
+		2) Sargable Predicate, 
+			Comparison Operator: 		Less Than or Equal (<=)
+			Subquery Input Required: 	No
+			Filter Factor: 				0.491925
+
+			Predicate Text:
+			--------------
+			(Q2.D_DATE_SK <= 2450955)
+
+
+		3) Start Key Predicate, 
+			Comparison Operator: 		Equal (=)
+			Subquery Input Required: 	No
+			Filter Factor: 				2.78283e-05
+
+			Predicate Text:
+			--------------
+			(Q2.D_DATE_SK = Q1.P_END_DATE_SK)
+
+
+		3) Stop Key Predicate, 
+			Comparison Operator: 		Equal (=)
+			Subquery Input Required: 	No
+			Filter Factor: 				2.78283e-05
+
+			Predicate Text:
+			--------------
+			(Q2.D_DATE_SK = Q1.P_END_DATE_SK)
+
+
+
+		Input Streams:
+		-------------
+			3) From Object SYSIBM.SQL240509072221830
+
+				Estimated number of rows: 	73049
+
+				Column Names:
+				------------
+				+Q2.D_DATE_SK(A)+Q2.$RID$
+
+
+		Output Streams:
+		--------------
+			4) To Operator #4
+
+				Estimated number of rows: 	38.9774
+				Actual number of rows: 		1
+
+
+Objects Used in Access Plan:
+---------------------------
+
+	Schema:   TPCDS   
+	Name:     DATE_DIM2
+	Type:     Data Partitioned Table
+			Last statistics update: 	2024-05-30-07.28.51.002480
+			Number of rows: 		73049
+			Number of buffer pool pages: 	656
+			Distinct row values: 		No
+			Tablespace name: 		<VARIOUS>
+			Tablespace overhead: 		6.725000
+			Tablespace transfer rate: 	0.160000
+			Prefetch page count: 		32
+			Container extent page count: 	32
+			Table overflow record count: 	0
+			Table Active Blocks: 		-1
+			Average Row Compression Ratio: 	0
+			Percentage Rows Compressed: 	0
+			Average Compressed Row Size: 	0
+
+	Schema:   SYSIBM  
+	Name:     SQL240509072221830
+	Type:     Index
+			Last statistics update: 	2024-05-30-07.28.51.002480
+			Number of rows: 		73049
+			Number of buffer pool pages: 	656
+			Distinct row values: 		Yes
+			Tablespace name: 		TS_SD_SMALL_001
+			Tablespace overhead: 		6.725000
+			Tablespace transfer rate: 	0.160000
+			Prefetch page count: 		32
+			Container extent page count: 	32
+			Index clustering statistic: 	0.988398
+			Index leaf pages: 		85
+			Index tree levels: 		2
+			Index full key cardinality: 	73049
+			Base Table Schema: 		TPCDS   
+			Base Table Name: 		DATE_DIM2
+			Columns in index:
+				D_DATE_SK(A)
+			Null keys: 			Yes
+
+	Schema:   TPCDS   
+	Name:     PROMOTION
+	Type:     Table
+			Last statistics update: 	2024-05-30-07.27.22.079775
+			Number of rows: 		300
+			Number of buffer pool pages: 	5
+			Distinct row values: 		No
+			Tablespace name: 		TS_SD_SMALL_001
+			Tablespace overhead: 		6.725000
+			Tablespace transfer rate: 	0.160000
+			Prefetch page count: 		32
+			Container extent page count: 	32
+			Table overflow record count: 	0
+			Table Active Blocks: 		-1
+			Average Row Compression Ratio: 	0
+			Percentage Rows Compressed: 	0
+			Average Compressed Row Size: 	0
+
+Runtime statistics for objects Used in Access Plan:
+-----------------------------------------------------
+
+	Schema: TPCDS   
+	Name: 	DATE_DIM2
+	Type: 	Data Partitioned Table
+
+			Member 0
+			---------
+
+				DataPartId 	Metrics
+				---------- 	--------------------
+				0          	rows_reads:244
+				           	object_data_l_reads:244
+				           	object_data_lbp_pages_found:244
+				           	object_data_gbp_indep_pages_found_in_lbp:244
+				           	object_data_caching_tier_gbp_indep_pages_found:244
+				1          	rows_reads:46
+				           	object_data_l_reads:46
+				           	object_data_lbp_pages_found:46
+				           	object_data_gbp_indep_pages_found_in_lbp:46
+				           	object_data_caching_tier_gbp_indep_pages_found:46
+
+	Schema: SYSIBM  
+	Name: 	SQL240509072221830
+	Type: 	Index
+
+			Member 0
+			---------
+
+				Metrics
+				--------------------
+				object_index_l_reads:580
+				object_index_lbp_pages_found:580
+				object_index_gbp_indep_pages_found_in_lbp:580
+
+	Schema: TPCDS   
+	Name: 	PROMOTION
+	Type: 	Table
+
+			Member 0
+			---------
+
+				Metrics
+				--------------------
+				rows_reads:300
+				object_data_l_reads:6
+				object_data_lbp_pages_found:6
+				object_data_gbp_indep_pages_found_in_lbp:6
+				object_data_caching_tier_gbp_indep_pages_found:6
+

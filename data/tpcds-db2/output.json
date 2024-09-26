@@ -1,0 +1,33 @@
+{
+    "Plan": {
+        "Node Type": "RETURN",
+        "Plans": [
+            {
+                "Node Type": "NLJOIN",
+                "Join Predicate": "(Q1.CP_END_DATE_SK = Q2.D_DATE_SK)",
+                "Plans": [
+                    {
+                        "Node Type": "FETCH ",
+                        "Relation Name": "DATE_DIM2",
+                        "Filter": "(Q2.D_LAST_DOM <= 2481252)",
+                        "Plans": [
+                            {
+                                "Node Type": "IXSCAN",
+                                "Relation Name": "SQL240509072221830",
+                                "Filter": "(Q2.D_DATE_SK = 2451449) AND (Q2.D_DATE_SK = 2451449)"
+                            }
+                        ]
+                    },
+                    {
+                        "Node Type": "TBSCAN",
+                        "Relation Name": "CATALOG_PAGE",
+                        "Filter": "(Q1.CP_CATALOG_NUMBER = 5)"
+                    }
+                ]
+            }
+        ],
+        "Actual Rows": 108
+    },
+    "Execution Time": 2.0,
+    "sort_shrheap_top": 0.0
+}

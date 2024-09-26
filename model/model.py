@@ -4,7 +4,6 @@ import json
 import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
-import logging
 
 class Prediction(nn.Module):
     def __init__(self, in_feature = 69, hid_units = 256, contract = 1, mid_layers = True, res_con = True):
@@ -193,10 +192,7 @@ class QueryFormer(nn.Module):
         self.pred2 = Prediction(hidden_dim, pred_hid)
         
     def forward(self, batched_data):
-        logging.info("QuerfyFormer forward")
-
         attn_bias, rel_pos, x = batched_data.attn_bias, batched_data.rel_pos, batched_data.x
-        logging.info("x shape: {}".format(x.shape))
 
         heights = batched_data.heights     
         
@@ -216,31 +212,19 @@ class QueryFormer(nn.Module):
         
         x_view = x.view(-1, 1165)
         node_feature = self.embbed_layer(x_view).view(n_batch,-1, self.hidden_dim)
-        logging.info("node_feature shape: {}".format(node_feature.shape))
         
         # -1 is number of dummy
         
         node_feature = node_feature + self.height_encoder(heights)
-        
-        
         super_token_feature = self.super_token.weight.unsqueeze(0).repeat(n_batch, 1, 1)
-        logging.info("super_token_feature shape: {}".format(super_token_feature.shape))
-        logging.info("super_token_feature values: {}".format(super_token_feature))
-        
-        super_node_feature = torch.cat([super_token_feature, node_feature], dim=1)   
-        logging.info("super_node_feature shape: {}".format(super_node_feature.shape))     
+        super_node_feature = torch.cat([super_token_feature, node_feature], dim=1)        
         
         # transfomrer encoder
         output = self.input_dropout(super_node_feature)
         for enc_layer in self.layers:
             output = enc_layer(output, tree_attn_bias)
         output = self.final_ln(output)
-        logging.info("output shape: {}".format(output.shape))
-        # Print the dimension of the super node feature
-        logging.info(f"Super node feature dimensions: {super_node_feature.size()}")
-        logging.info("output[:,0,:].shape: {}".format(output[:,0,:].shape))
-        logging.info("output[:,0,:]: {}".format(output[:,0,:]))
-            
+        
         return self.pred(output[:,0,:]), self.pred2(output[:,0,:])
 
 
